@@ -1,10 +1,11 @@
 import voluptuous as vol
+
 from homeassistant import config_entries
 
 DOMAIN = "qhgas"
 
 
-class QHGasFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class QHGasConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
@@ -12,8 +13,16 @@ class QHGasFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
 
-            return self.async_create_entry(title="QH Gas", data=user_input)
+            return self.async_create_entry(
+                title=f"QH Gas {user_input['card_id']}",
+                data=user_input
+            )
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema({vol.Required("card_id"): str})
+            step_id="user",
+            data_schema=vol.Schema({
+
+                vol.Required("card_id"): str,
+
+            }),
         )
