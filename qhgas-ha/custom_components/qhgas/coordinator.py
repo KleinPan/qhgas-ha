@@ -12,16 +12,11 @@ SCAN_INTERVAL = 3600
 
 _LOGGER = logging.getLogger(__name__)
 
-_LOGGER.error("QHGas coordinator 已加载")
-
 class QHGasCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, card_id):
-
         self.hass = hass
-
         self.card_id = card_id
-
         super().__init__(
             hass,
             _LOGGER,
@@ -30,36 +25,53 @@ class QHGasCoordinator(DataUpdateCoordinator):
         )
 
     async def _async_update_data(self):
+        data = await self.get_balance()
 
-        balance = await self.get_balance()
-
-        return {"balance": balance}
+        if data is not None:
+            return data
+        
+        return {
+            "balance": 0.0,
+            "nowPrice": 0.0,
+            "battery_level": 0.0,
+            "valveState": "未知",
+            "signal": "未知"
+        }
 
     async def get_balance(self):
-
         try:
-
-            # 生成 tokenS
-
-            token = hashlib.md5((self.card_id + "qhgas").encode("utf-8")).hexdigest()
+            # 按照用户提供的脚本生成 token
+            s = '{"data":{"cardId":"' + self.card_id + '","userName":null,"nowPrice":null}}'
+            token = hashlib.md5((s + "qhgas").encode()).hexdigest()
 
             url = "http://wkf.qhgas.com/rs/WX/getLastBalance"
 
-            payload = {"data": {"cardId": self.card_id, "userName": None, "nowPrice": None}, "tokenS": token}
+            # 按照用户提供的格式构建请求数据
+            data = s[:-1] + ',"tokenS":"' + token + '"}'
 
+            # 使用用户提供的请求头
             headers = {
                 "Content-Type": "application/json",
-                "User-Agent": "Mozilla/5.0",
-                "Referer": "http://wkf.qhgas.com/",
+                "X-Requested-With": "XMLHttpRequest",
+                "User-Agent": "MicroMessenger",
+                "Referer": "http://wkf.qhgas.com/index.html"
             }
 
+            _LOGGER.warning("QHGas API 请求数据: %s", data)
+            _LOGGER.warning("QHGas API 请求头: %s", headers)
+
             async with aiohttp.ClientSession() as session:
-
                 async with session.post(
-                    url, json=payload, headers=headers, timeout=15
+                    url, data=data, headers=headers, timeout=15
                 ) as response:
-
                     _LOGGER.warning("QHGas API 响应状态码: %s", response.status)
+
+                    # 即使 API 返回错误，也尝试获取更多信息
+                    try:
+                        response_text = await response.text()
+                        _LOGGER.warning("QHGas API 响应内容: %s", response_text)
+                    except:
+                        pass
 
                     if response.status != 200:
                         _LOGGER.error("获取燃气余额失败: API 返回错误状态码 %s", response.status)
@@ -69,15 +81,12 @@ class QHGasCoordinator(DataUpdateCoordinator):
                         data = await response.json()
                         _LOGGER.warning("QHGas API 返回: %s", data)
 
-                        # 根据实际返回结构修改
+                        # 按照用户提供的返回格式解析
                         if data.get("resultValue") == 0:
-                            balance = data.get("balance")
-                            now_price = data.get("nowPrice")
-                            battery_level = data.get("battery_level")
                             return {
-                                "balance": float(balance) if balance else 0.0,
-                                "nowPrice": float(now_price) if now_price else 0.0,
-                                "battery_level": float(battery_level) if battery_level else 0.0,
+                                "balance": float(data.get("balance", 0)),
+                                "nowPrice": float(data.get("nowPrice", 0)),
+                                "battery_level": float(data.get("battery_level", 0)),
                                 "valveState": data.get("valveState", "未知"),
                                 "signal": data.get("signal", "未知")
                             }
@@ -88,7 +97,5 @@ class QHGasCoordinator(DataUpdateCoordinator):
                         return None
 
         except Exception as e:
-
             _LOGGER.error("获取燃气余额失败: %s", e)
-
             return None

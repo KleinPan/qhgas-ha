@@ -4,7 +4,6 @@ from homeassistant import config_entries
 
 DOMAIN = "qhgas"
 
-
 class QHGasConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
