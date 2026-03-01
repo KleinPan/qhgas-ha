@@ -2,10 +2,13 @@
   "domain": "qhgas",
   "name": "QH Gas",
   "version": "1.0.0",
-  "documentation": "",
+  "documentation": "https://github.com/KleinPan/qhgas-ha",
   "requirements": [],
   "dependencies": [],
-  "codeowners": [],
+  "codeowners": ["@KleinPan"],
   "config_flow": true,
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "homeassistant": "2023.1.0",
+  "loggers": ["qhgas"],
+  "quality_scale": "bronze"
 }

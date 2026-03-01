@@ -1,6 +1,6 @@
 # QH Gas Home Assistant Integration
 
-[![GitHub Release](https://img.shields.io/github/release/yourusername/qhgas-ha)](https://github.com/yourusername/qhgas-ha/releases)
+[![GitHub Release](https://img.shields.io/github/release/KleinPan/qhgas-ha)](https://github.com/KleinPan/qhgas-ha/releases)
 [![Home Assistant Version](https://img.shields.io/badge/Home-Assistant-%23041B4D?logo=home-assistant)](https://www.home-assistant.io)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
